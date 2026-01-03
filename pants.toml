@@ -1,0 +1,36 @@
+[GLOBAL]
+pants_version = "2.23.0"
+backend_packages = [
+    "pants.backend.python",
+    "pants.backend.python.lint.black",
+    "pants.backend.python.lint.isort",
+    "pants.backend.python.typecheck.mypy",
+    "pants.backend.shell",
+    "pants.backend.experimental.javascript",
+]
+
+[source]
+root_patterns = [
+    "backend/src",
+    "backend/tests",
+    "frontend/src",
+]
+
+[python]
+interpreter_constraints = ["CPython==3.11.*"]
+enable_resolves = true
+
+[python.resolves]
+python-default = "backend/lock.txt"
+
+[python-infer]
+use_rust_parser = true
+
+[shell-setup]
+dependency_inference = true
+
+[nodejs]
+package_manager = "npm"
+
+[anonymous-telemetry]
+enabled = false
