@@ -99,8 +99,29 @@ pants generate-lockfiles     # Regenerate Python lock file
 | `/health` | GET | Health check |
 | `/api/content/{id}` | GET | Get reading content by ID |
 
+## Deployment
+
+### GitHub Pages (Frontend)
+
+The frontend is automatically deployed to GitHub Pages on every push to `main`.
+
+**Live URL:** https://RenanNascimento.github.io/dante
+
+The deployment workflow:
+1. Builds the Next.js app with static export
+2. Uploads to GitHub Pages
+3. Available at the URL above
+
+### Manual Deployment
+
+```bash
+cd frontend
+npm run build    # Creates static export in 'out/' directory
+```
+
 ## Tech Stack
 
 - **Frontend**: Next.js 16, React, TypeScript, Tailwind CSS
 - **Backend**: FastAPI, Python 3.11, Pydantic
 - **Build System**: Pants
+- **CI/CD**: GitHub Actions
