@@ -164,7 +164,7 @@ export default function UploadContent({ onContentReady }: UploadContentProps) {
           <input
             ref={audioInputRef}
             type="file"
-            accept="audio/*"
+            accept=".mp3,.wav,.m4a,.aac,.ogg,.webm,audio/*"
             onChange={handleAudioFileChange}
             className="hidden"
           />
