@@ -11,12 +11,15 @@ export interface ReadingContent {
   words: WordTiming[];
 }
 
+// Base path for assets (handles GitHub Pages deployment)
+const basePath = process.env.NODE_ENV === "production" ? "/dante" : "";
+
 // Mock content with word timings
 // Using local audio file for development
 export const mockContent: ReadingContent = {
   id: "1",
   title: "Sample Reading",
-  audioUrl: "/audio/sample.mp3",
+  audioUrl: `${basePath}/audio/sample.mp3`,
   words: [
     { word: "To", startTime: 0.0, endTime: 0.15 },
     { word: "Sherlock", startTime: 0.15, endTime: 0.55 },
