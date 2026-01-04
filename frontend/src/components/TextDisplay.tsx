@@ -9,6 +9,8 @@ interface TextDisplayProps {
   currentTime: number;
 }
 
+import { useRef, useEffect } from "react";
+
 export default function TextDisplay({ words, currentTime }: TextDisplayProps) {
   // Group words into phrases (split by . ! ?)
   const phrases: { words: WordTiming[]; startTime: number; endTime: number }[] = [];
@@ -33,11 +35,28 @@ export default function TextDisplay({ words, currentTime }: TextDisplayProps) {
     (p) => currentTime >= p.startTime && currentTime < p.endTime
   );
 
+  // Refs for each phrase
+  const phraseRefs = useRef<(HTMLSpanElement | null)[]>([]);
+
+  useEffect(() => {
+    if (
+      activePhraseIdx !== -1 &&
+      phraseRefs.current[activePhraseIdx]
+    ) {
+      phraseRefs.current[activePhraseIdx]?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "nearest",
+      });
+    }
+  }, [activePhraseIdx]);
+
   return (
     <div className="text-xl leading-relaxed md:text-2xl md:leading-loose">
       {phrases.map((phrase, idx) => (
         <span
           key={idx}
+          ref={el => (phraseRefs.current[idx] = el)}
           className={`transition-colors duration-150 ${
             idx === activePhraseIdx
               ? "bg-yellow-300 dark:bg-yellow-500 dark:text-black rounded px-1"
