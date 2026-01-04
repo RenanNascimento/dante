@@ -28,6 +28,7 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
   const [duration, setDuration] = useState(0);
   const [loopMode, setLoopMode] = useState<LoopMode>(0);
   const [currentRound, setCurrentRound] = useState(1);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
   // Refs to always have latest values in event handlers
   const loopModeRef = useRef(loopMode);
   const currentRoundRef = useRef(currentRound);
@@ -132,6 +133,13 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
     });
   };
 
+  const handleSpeedChange = (speed: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.playbackRate = speed;
+    setPlaybackSpeed(speed);
+  };
+
   return (
     <div className="min-h-screen pb-32">
       {/* Hidden audio element */}
@@ -157,11 +165,13 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
         currentTime={currentTime}
         duration={duration}
         loopMode={loopMode}
+        playbackSpeed={playbackSpeed}
         onPlayPause={handlePlayPause}
         onSkipBackward={handleSkipBackward}
         onSkipForward={handleSkipForward}
         onSeek={handleSeek}
         onLoopToggle={handleLoopToggle}
+        onSpeedChange={handleSpeedChange}
       />
     </div>
   );
