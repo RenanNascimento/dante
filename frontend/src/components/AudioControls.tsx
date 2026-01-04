@@ -1,13 +1,17 @@
 "use client";
 
+export type LoopMode = 0 | 1 | 2 | 3 | 4;
+
 interface AudioControlsProps {
   isPlaying: boolean;
   currentTime: number;
   duration: number;
+  loopMode: LoopMode;
   onPlayPause: () => void;
   onSkipBackward: () => void;
   onSkipForward: () => void;
   onSeek: (time: number) => void;
+  onLoopToggle: () => void;
 }
 
 function formatTime(seconds: number): string {
@@ -16,16 +20,28 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
+function getLoopLabel(mode: LoopMode): string {
+  switch (mode) {
+    case 0: return "";
+    case 1: return "1";
+    case 2: return "3";
+    case 3: return "5";
+    case 4: return "∞";
+  }
+}
+
 export default function AudioControls({
   isPlaying,
   currentTime,
   duration,
+  loopMode,
   onPlayPause,
   onSkipBackward,
   onSkipForward,
   onSeek,
+  onLoopToggle,
 }: AudioControlsProps) {
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const loopLabel = getLoopLabel(loopMode);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-700 p-4 shadow-lg">
@@ -131,6 +147,37 @@ export default function AudioControls({
               />
             </svg>
             <span className="text-xs block -mt-1">15</span>
+          </button>
+
+          {/* Loop button */}
+          <button
+            onClick={onLoopToggle}
+            className={`p-3 rounded-full transition-colors relative ${
+              loopMode > 0
+                ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
+                : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            }`}
+            aria-label="Toggle loop mode"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"
+              />
+            </svg>
+            {loopLabel && (
+              <span className="absolute -top-1 -right-1 text-xs font-bold bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center">
+                {loopLabel}
+              </span>
+            )}
           </button>
         </div>
       </div>

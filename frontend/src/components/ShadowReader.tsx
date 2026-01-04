@@ -1,13 +1,23 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { ReadingContent } from "@/data/mockContent";
 import TextDisplay from "./TextDisplay";
-import AudioControls from "./AudioControls";
+import AudioControls, { LoopMode } from "./AudioControls";
 import ThemeToggle from "./ThemeToggle";
 
 interface ShadowReaderProps {
   content: ReadingContent;
+}
+
+function getMaxRounds(loopMode: LoopMode): number {
+  switch (loopMode) {
+    case 0: return 1;
+    case 1: return 1;
+    case 2: return 3;
+    case 3: return 5;
+    case 4: return Infinity;
+  }
 }
 
 export default function ShadowReader({ content }: ShadowReaderProps) {
@@ -15,6 +25,8 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [loopMode, setLoopMode] = useState<LoopMode>(0);
+  const [currentRound, setCurrentRound] = useState(1);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -35,7 +47,18 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
     };
 
     const handleEnded = () => {
-      setIsPlaying(false);
+      const maxRounds = getMaxRounds(loopMode);
+
+      if (loopMode > 0 && currentRound < maxRounds) {
+        // More rounds to go - restart the audio
+        setCurrentRound((prev) => prev + 1);
+        audio.currentTime = 0;
+        audio.play();
+      } else {
+        // Done playing
+        setIsPlaying(false);
+        setCurrentRound(1);
+      }
     };
 
     // Check if duration is already available
@@ -56,7 +79,7 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
       audio.removeEventListener("canplaythrough", handleDurationChange);
       audio.removeEventListener("ended", handleEnded);
     };
-  }, []);
+  }, [loopMode, currentRound]);
 
   const handlePlayPause = () => {
     const audio = audioRef.current;
@@ -89,6 +112,11 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
     setCurrentTime(time);
   };
 
+  const handleLoopToggle = () => {
+    setLoopMode((prev) => ((prev + 1) % 5) as LoopMode);
+    setCurrentRound(1);
+  };
+
   return (
     <div className="min-h-screen pb-32">
       {/* Hidden audio element */}
@@ -113,10 +141,12 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
         isPlaying={isPlaying}
         currentTime={currentTime}
         duration={duration}
+        loopMode={loopMode}
         onPlayPause={handlePlayPause}
         onSkipBackward={handleSkipBackward}
         onSkipForward={handleSkipForward}
         onSeek={handleSeek}
+        onLoopToggle={handleLoopToggle}
       />
     </div>
   );
