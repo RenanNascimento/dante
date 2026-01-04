@@ -56,7 +56,7 @@ export default function TextDisplay({ words, currentTime }: TextDisplayProps) {
       {phrases.map((phrase, idx) => (
         <span
           key={idx}
-          ref={el => (phraseRefs.current[idx] = el)}
+          ref={el => { phraseRefs.current[idx] = el; }}
           className={`transition-colors duration-150 ${
             idx === activePhraseIdx
               ? "bg-yellow-300 dark:bg-yellow-500 dark:text-black rounded px-1"
