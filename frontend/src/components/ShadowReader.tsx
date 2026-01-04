@@ -12,13 +12,14 @@ interface ShadowReaderProps {
 
 function getMaxRounds(loopMode: LoopMode): number {
   switch (loopMode) {
-    case 0: return 1;
-    case 1: return 1;
-    case 2: return 3;
-    case 3: return 5;
+    case 0: return 1; // no repeat
+    case 1: return 2; // play twice (initial + 1 repeat)
+    case 2: return 3; // play three times (initial + 2 repeats)
+    case 3: return 5; // play five times (initial + 4 repeats)
     case 4: return Infinity;
   }
 }
+
 
 export default function ShadowReader({ content }: ShadowReaderProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -27,6 +28,16 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
   const [duration, setDuration] = useState(0);
   const [loopMode, setLoopMode] = useState<LoopMode>(0);
   const [currentRound, setCurrentRound] = useState(1);
+  // Refs to always have latest values in event handlers
+  const loopModeRef = useRef(loopMode);
+  const currentRoundRef = useRef(currentRound);
+
+  useEffect(() => {
+    loopModeRef.current = loopMode;
+  }, [loopMode]);
+  useEffect(() => {
+    currentRoundRef.current = currentRound;
+  }, [currentRound]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -34,7 +45,6 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
 
     const handleTimeUpdate = () => {
       setCurrentTime(audio.currentTime);
-      // Also update duration in case it wasn't available earlier
       if (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
         setDuration(audio.duration);
       }
@@ -47,30 +57,32 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
     };
 
     const handleEnded = () => {
-      const maxRounds = getMaxRounds(loopMode);
-
-      if (loopMode > 0 && currentRound < maxRounds) {
-        // More rounds to go - restart the audio
+      const maxRounds = getMaxRounds(loopModeRef.current);
+      if (loopModeRef.current > 0 && currentRoundRef.current < maxRounds) {
         setCurrentRound((prev) => prev + 1);
-        audio.currentTime = 0;
-        audio.play();
+        setTimeout(() => {
+          if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play();
+          }
+        }, 100); // slight delay to ensure state updates
       } else {
-        // Done playing
         setIsPlaying(false);
         setCurrentRound(1);
       }
     };
 
-    // Check if duration is already available
-    if (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
-      setDuration(audio.duration);
-    }
-
+    // Only add listeners once
     audio.addEventListener("timeupdate", handleTimeUpdate);
     audio.addEventListener("loadedmetadata", handleDurationChange);
     audio.addEventListener("durationchange", handleDurationChange);
     audio.addEventListener("canplaythrough", handleDurationChange);
     audio.addEventListener("ended", handleEnded);
+
+    // Check if duration is already available
+    if (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
+      setDuration(audio.duration);
+    }
 
     return () => {
       audio.removeEventListener("timeupdate", handleTimeUpdate);
@@ -79,7 +91,7 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
       audio.removeEventListener("canplaythrough", handleDurationChange);
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [loopMode, currentRound]);
+  }, []); // only run once
 
   const handlePlayPause = () => {
     const audio = audioRef.current;
@@ -113,8 +125,11 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
   };
 
   const handleLoopToggle = () => {
-    setLoopMode((prev) => ((prev + 1) % 5) as LoopMode);
-    setCurrentRound(1);
+    setLoopMode((prev) => {
+      const next = ((prev + 1) % 5) as LoopMode;
+      setCurrentRound(1);
+      return next;
+    });
   };
 
   return (

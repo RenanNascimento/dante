@@ -24,8 +24,8 @@ function getLoopLabel(mode: LoopMode): string {
   switch (mode) {
     case 0: return "";
     case 1: return "1";
-    case 2: return "3";
-    case 3: return "5";
+    case 2: return "2";
+    case 3: return "4";
     case 4: return "∞";
   }
 }
