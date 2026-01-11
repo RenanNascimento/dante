@@ -148,8 +148,8 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
       {/* Header */}
       <header className="sticky top-0 bg-white/80 dark:bg-black/80 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800 p-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="w-10" />
-          <h1 className="text-xl font-semibold">{content.title}</h1>
+          <div className="w-12" /> {/* Space for sidebar hamburger button */}
+          <h1 className="text-xl font-semibold truncate px-2">{content.title}</h1>
           <ThemeToggle />
         </div>
       </header>
