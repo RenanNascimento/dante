@@ -3,10 +3,11 @@
 import { useState } from "react";
 
 interface SidebarProps {
-  currentView: "home" | "reader";
+  currentView: "home" | "reader" | "annotation";
   readingTitle?: string;
   onNavigateHome: () => void;
   onNavigateReader: () => void;
+  onNavigateAnnotation: () => void;
   hasContent: boolean;
 }
 
@@ -15,6 +16,7 @@ export default function Sidebar({
   readingTitle,
   onNavigateHome,
   onNavigateReader,
+  onNavigateAnnotation,
   hasContent,
 }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -147,6 +149,35 @@ export default function Sidebar({
               </div>
             </button>
           )}
+
+          {/* Time Annotation button */}
+          <button
+            onClick={() => {
+              onNavigateAnnotation();
+              setIsOpen(false);
+            }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              currentView === "annotation"
+                ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-5 h-5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="font-medium">Time Annotation</span>
+          </button>
         </nav>
       </div>
     </>

@@ -4,9 +4,10 @@ import { useState } from "react";
 import ShadowReader from "@/components/ShadowReader";
 import UploadContent from "@/components/UploadContent";
 import Sidebar from "@/components/Sidebar";
+import TimeAnnotation from "@/components/TimeAnnotation";
 import { ReadingContent, mockContent } from "@/data/mockContent";
 
-type View = "home" | "reader";
+type View = "home" | "reader" | "annotation";
 
 export default function Home() {
   const [content, setContent] = useState<ReadingContent | null>(null);
@@ -27,6 +28,10 @@ export default function Home() {
     }
   };
 
+  const handleNavigateAnnotation = () => {
+    setCurrentView("annotation");
+  };
+
   const handleUseMock = () => {
     setContent(mockContent);
     setCurrentView("reader");
@@ -39,11 +44,14 @@ export default function Home() {
         readingTitle={content?.title}
         onNavigateHome={handleNavigateHome}
         onNavigateReader={handleNavigateReader}
+        onNavigateAnnotation={handleNavigateAnnotation}
         hasContent={!!content}
       />
 
       {currentView === "reader" && content ? (
         <ShadowReader content={content} />
+      ) : currentView === "annotation" ? (
+        <TimeAnnotation />
       ) : (
         <div className="min-h-screen flex flex-col items-center justify-center p-6">
           <UploadContent onContentReady={handleContentReady} />
