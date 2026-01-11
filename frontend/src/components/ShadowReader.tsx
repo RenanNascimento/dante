@@ -29,9 +29,12 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
   const [loopMode, setLoopMode] = useState<LoopMode>(0);
   const [currentRound, setCurrentRound] = useState(1);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [pauseAtPhraseEnd, setPauseAtPhraseEnd] = useState(false);
   // Refs to always have latest values in event handlers
   const loopModeRef = useRef(loopMode);
   const currentRoundRef = useRef(currentRound);
+  const pauseAtPhraseEndRef = useRef(pauseAtPhraseEnd);
+  const lastPausedAtIndexRef = useRef<number | null>(null);
 
   useEffect(() => {
     loopModeRef.current = loopMode;
@@ -39,15 +42,38 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
   useEffect(() => {
     currentRoundRef.current = currentRound;
   }, [currentRound]);
+  useEffect(() => {
+    pauseAtPhraseEndRef.current = pauseAtPhraseEnd;
+  }, [pauseAtPhraseEnd]);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
+      const time = audio.currentTime;
+      setCurrentTime(time);
       if (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
         setDuration(audio.duration);
+      }
+
+      // Pause at phrase end logic
+      if (pauseAtPhraseEndRef.current && !audio.paused) {
+        // Check if we've passed the end of a phrase
+        for (let i = 0; i < content.words.length; i++) {
+          const word = content.words[i];
+          // If we just crossed the endTime of a word and haven't paused here yet
+          if (
+            time >= word.endTime &&
+            time < word.endTime + 0.1 && // small window to catch the end
+            lastPausedAtIndexRef.current !== i
+          ) {
+            audio.pause();
+            setIsPlaying(false);
+            lastPausedAtIndexRef.current = i;
+            break;
+          }
+        }
       }
     };
 
@@ -140,6 +166,12 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
     setPlaybackSpeed(speed);
   };
 
+  const handlePauseAtPhraseEndToggle = () => {
+    setPauseAtPhraseEnd((prev) => !prev);
+    // Reset the last paused index when toggling
+    lastPausedAtIndexRef.current = null;
+  };
+
   return (
     <div className="min-h-screen pb-32">
       {/* Hidden audio element */}
@@ -166,12 +198,14 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
         duration={duration}
         loopMode={loopMode}
         playbackSpeed={playbackSpeed}
+        pauseAtPhraseEnd={pauseAtPhraseEnd}
         onPlayPause={handlePlayPause}
         onSkipBackward={handleSkipBackward}
         onSkipForward={handleSkipForward}
         onSeek={handleSeek}
         onLoopToggle={handleLoopToggle}
         onSpeedChange={handleSpeedChange}
+        onPauseAtPhraseEndToggle={handlePauseAtPhraseEndToggle}
       />
     </div>
   );

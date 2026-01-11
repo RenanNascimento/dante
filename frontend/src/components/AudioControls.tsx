@@ -10,12 +10,14 @@ interface AudioControlsProps {
   duration: number;
   loopMode: LoopMode;
   playbackSpeed: number;
+  pauseAtPhraseEnd: boolean;
   onPlayPause: () => void;
   onSkipBackward: () => void;
   onSkipForward: () => void;
   onSeek: (time: number) => void;
   onLoopToggle: () => void;
   onSpeedChange: (speed: number) => void;
+  onPauseAtPhraseEndToggle: () => void;
 }
 
 function formatTime(seconds: number): string {
@@ -40,12 +42,14 @@ export default function AudioControls({
   duration,
   loopMode,
   playbackSpeed,
+  pauseAtPhraseEnd,
   onPlayPause,
   onSkipBackward,
   onSkipForward,
   onSeek,
   onLoopToggle,
   onSpeedChange,
+  onPauseAtPhraseEndToggle,
 }: AudioControlsProps) {
   const loopLabel = getLoopLabel(loopMode);
   const [speedDropdownOpen, setSpeedDropdownOpen] = useState(false);
@@ -201,7 +205,7 @@ export default function AudioControls({
             </button>
           </div>
 
-          {/* Loop button - Right side */}
+          {/* Loop button */}
           <button
             onClick={onLoopToggle}
             className={`p-3 rounded-full transition-colors relative ${
@@ -230,6 +234,33 @@ export default function AudioControls({
                 {loopLabel}
               </span>
             )}
+          </button>
+
+          {/* Pause at phrase end button */}
+          <button
+            onClick={onPauseAtPhraseEndToggle}
+            className={`p-3 rounded-full transition-colors ${
+              pauseAtPhraseEnd
+                ? "bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400"
+                : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            }`}
+            aria-label="Pause at phrase end"
+            title="Pause at phrase end"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z"
+              />
+            </svg>
           </button>
         </div>
       </div>
