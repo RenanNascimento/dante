@@ -2,6 +2,7 @@ export interface WordTiming {
   word: string;
   startTime: number;
   endTime: number;
+  translation?: string;
 }
 
 export interface ReadingContent {

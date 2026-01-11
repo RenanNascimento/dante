@@ -58,6 +58,7 @@ export default function UploadContent({ onContentReady }: UploadContentProps) {
           word: w.word,
           startTime: w.start_time,
           endTime: w.end_time,
+          translation: w.translation,
         }));
         setJsonWords(words);
         setError("");
