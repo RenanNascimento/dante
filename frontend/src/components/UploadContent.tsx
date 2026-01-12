@@ -53,13 +53,7 @@ export default function UploadContent({ onContentReady }: UploadContentProps) {
           setJsonWords(null);
           return;
         }
-        // Map snake_case to camelCase
-        const words: WordTiming[] = json.words.map((w: any) => ({
-          word: w.word,
-          startTime: w.start_time,
-          endTime: w.end_time,
-          translation: w.translation,
-        }));
+        const words: WordTiming[] = json.words;
         setJsonWords(words);
         setError("");
       } catch (err) {
