@@ -3,6 +3,7 @@
 import tempfile
 import os
 from fastapi import FastAPI, UploadFile, File, HTTPException, Query
+import multipart  # Required for FastAPI file uploads
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pywhispercpp.model import Model as WhisperModel
