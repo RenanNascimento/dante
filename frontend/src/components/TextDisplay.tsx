@@ -11,50 +11,23 @@ interface TextDisplayProps {
 export default function TextDisplay({ words, currentTime }: TextDisplayProps) {
   const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(null);
 
-  // Group words into phrases (split by . ! ?)
-  const phrases: { words: WordTiming[]; startTime: number; endTime: number; startIndex: number }[] = [];
-  let currentPhrase: WordTiming[] = [];
-  let phraseStartIndex = 0;
-  const punctRegex = /[.!?]/;
-
-  words.forEach((w, i) => {
-    if (currentPhrase.length === 0) {
-      phraseStartIndex = i;
-    }
-    currentPhrase.push(w);
-    if (punctRegex.test(w.word) || punctRegex.test(w.word.slice(-1)) || i === words.length - 1) {
-      if (currentPhrase.length > 0) {
-        phrases.push({
-          words: [...currentPhrase],
-          startTime: currentPhrase[0].startTime,
-          endTime: currentPhrase[currentPhrase.length - 1].endTime,
-          startIndex: phraseStartIndex,
-        });
-        currentPhrase = [];
-      }
-    }
-  });
-
-  // Find the active phrase
-  const activePhraseIdx = phrases.findIndex(
-    (p) => currentTime >= p.startTime && currentTime < p.endTime
+  // Find the active word based on current time
+  const activeWordIdx = words.findIndex(
+    (w) => currentTime >= w.startTime && currentTime < w.endTime
   );
 
-  // Refs for each phrase
-  const phraseRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  // Refs for each word
+  const wordRefs = useRef<(HTMLSpanElement | null)[]>([]);
 
   useEffect(() => {
-    if (
-      activePhraseIdx !== -1 &&
-      phraseRefs.current[activePhraseIdx]
-    ) {
-      phraseRefs.current[activePhraseIdx]?.scrollIntoView({
+    if (activeWordIdx !== -1 && wordRefs.current[activeWordIdx]) {
+      wordRefs.current[activeWordIdx]?.scrollIntoView({
         behavior: "smooth",
         block: "center",
         inline: "nearest",
       });
     }
-  }, [activePhraseIdx]);
+  }, [activeWordIdx]);
 
   // Close tooltip when clicking outside
   useEffect(() => {
@@ -68,59 +41,51 @@ export default function TextDisplay({ words, currentTime }: TextDisplayProps) {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  const handleWordClick = (globalIndex: number, e: React.MouseEvent) => {
+  const handleWordClick = (index: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    const word = words[globalIndex];
+    const word = words[index];
     if (word.translation) {
-      setSelectedWordIndex(selectedWordIndex === globalIndex ? null : globalIndex);
+      setSelectedWordIndex(selectedWordIndex === index ? null : index);
     }
   };
 
   return (
     <div className="text-xl leading-relaxed md:text-2xl md:leading-loose">
-      {phrases.map((phrase, idx) => (
-        <span
-          key={idx}
-          ref={el => { phraseRefs.current[idx] = el; }}
-          className={`transition-colors duration-150 ${
-            idx === activePhraseIdx
-              ? "bg-yellow-300 dark:bg-yellow-500 dark:text-black rounded px-1"
-              : ""
-          }`}
-        >
-          {phrase.words.map((w, wi) => {
-            const globalIndex = phrase.startIndex + wi;
-            const isSelected = selectedWordIndex === globalIndex;
-            const hasTranslation = !!w.translation;
+      {words.map((w, idx) => {
+        const isActive = idx === activeWordIdx;
+        const isSelected = selectedWordIndex === idx;
+        const hasTranslation = !!w.translation;
 
-            return (
+        return (
+          <span
+            key={idx}
+            ref={el => { wordRefs.current[idx] = el; }}
+            className="relative inline"
+          >
+            <span
+              data-word-index={idx}
+              onClick={(e) => handleWordClick(idx, e)}
+              className={`transition-colors duration-150 ${
+                isActive
+                  ? "bg-yellow-300 dark:bg-yellow-500 dark:text-black rounded px-1"
+                  : ""
+              } ${hasTranslation ? 'cursor-pointer hover:underline decoration-dotted underline-offset-4' : ''} ${isSelected ? 'underline decoration-solid' : ''}`}
+            >
+              {w.word}
+            </span>
+            {isSelected && w.translation && (
               <span
-                key={wi}
-                className="relative inline"
+                data-tooltip
+                className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-1.5 bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-800 text-sm rounded-lg shadow-lg whitespace-nowrap z-50 animate-fade-in"
               >
-                <span
-                  data-word-index={globalIndex}
-                  onClick={(e) => handleWordClick(globalIndex, e)}
-                  className={`${hasTranslation ? 'cursor-pointer hover:underline decoration-dotted underline-offset-4' : ''} ${isSelected ? 'underline decoration-solid' : ''}`}
-                >
-                  {w.word}
-                </span>
-                {isSelected && w.translation && (
-                  <span
-                    data-tooltip
-                    className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-1.5 bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-800 text-sm rounded-lg shadow-lg whitespace-nowrap z-50 animate-fade-in"
-                  >
-                    {w.translation}
-                    <span className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-zinc-800 dark:border-t-zinc-200" />
-                  </span>
-                )}
-                {wi < phrase.words.length - 1 ? " " : ""}
+                {w.translation}
+                <span className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-zinc-800 dark:border-t-zinc-200" />
               </span>
-            );
-          })}
-          {" "}
-        </span>
-      ))}
+            )}
+            {" "}
+          </span>
+        );
+      })}
     </div>
   );
 }
