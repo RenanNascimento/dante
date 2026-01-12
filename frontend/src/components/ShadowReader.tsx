@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect } from "react";
 import { ReadingContent } from "@/data/mockContent";
 import TextDisplay from "./TextDisplay";
 import AudioControls, { LoopMode } from "./AudioControls";
@@ -35,6 +35,7 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
   const currentRoundRef = useRef(currentRound);
   const pauseAtPhraseEndRef = useRef(pauseAtPhraseEnd);
   const lastPausedAtIndexRef = useRef<number | null>(null);
+  const contentWordsRef = useRef(content.words);
 
   useEffect(() => {
     loopModeRef.current = loopMode;
@@ -45,6 +46,9 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
   useEffect(() => {
     pauseAtPhraseEndRef.current = pauseAtPhraseEnd;
   }, [pauseAtPhraseEnd]);
+  useEffect(() => {
+    contentWordsRef.current = content.words;
+  }, [content.words]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -59,19 +63,33 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
 
       // Pause at phrase end logic
       if (pauseAtPhraseEndRef.current && !audio.paused) {
-        // Check if we've passed the end of a phrase
-        for (let i = 0; i < content.words.length; i++) {
-          const word = content.words[i];
-          // If we just crossed the endTime of a word and haven't paused here yet
-          if (
-            time >= word.endTime &&
-            time < word.endTime + 0.1 && // small window to catch the end
-            lastPausedAtIndexRef.current !== i
-          ) {
+        const words = contentWordsRef.current;
+        // Find the current word index based on time
+        let currentWordIndex = -1;
+        for (let i = 0; i < words.length; i++) {
+          if (time >= words[i].startTime && time < words[i].endTime) {
+            currentWordIndex = i;
+            break;
+          }
+        }
+
+        // If we've moved past a word (current word changed or we're past the last paused word)
+        const lastPausedIdx = lastPausedAtIndexRef.current;
+        if (lastPausedIdx !== null && currentWordIndex > lastPausedIdx) {
+          // We've moved to a new word, pause at the start of this word
+          audio.pause();
+          setIsPlaying(false);
+          lastPausedAtIndexRef.current = currentWordIndex;
+        } else if (lastPausedIdx === null && currentWordIndex >= 0) {
+          // First word, set the index but don't pause yet
+          lastPausedAtIndexRef.current = currentWordIndex;
+        } else if (currentWordIndex === -1 && lastPausedIdx !== null && lastPausedIdx < words.length - 1) {
+          // We're in a gap between words, check if we passed a word
+          const lastWord = words[lastPausedIdx];
+          if (time >= lastWord.endTime) {
             audio.pause();
             setIsPlaying(false);
-            lastPausedAtIndexRef.current = i;
-            break;
+            lastPausedAtIndexRef.current = lastPausedIdx + 1;
           }
         }
       }
