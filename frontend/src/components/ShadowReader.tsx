@@ -153,13 +153,39 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
   const handleSkipBackward = () => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.currentTime = Math.max(0, audio.currentTime - 15);
+    const words = content.words;
+    const time = audio.currentTime;
+
+    // Find the current word and go to its startTime
+    for (let i = words.length - 1; i >= 0; i--) {
+      if (time >= words[i].startTime) {
+        audio.currentTime = words[i].startTime;
+        setCurrentTime(words[i].startTime);
+        return;
+      }
+    }
+    // If before all words, go to start
+    audio.currentTime = 0;
+    setCurrentTime(0);
   };
 
   const handleSkipForward = () => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.currentTime = Math.min(audio.duration, audio.currentTime + 15);
+    const words = content.words;
+    const time = audio.currentTime;
+
+    // Find the next word and go to its startTime
+    for (let i = 0; i < words.length; i++) {
+      if (words[i].startTime > time) {
+        audio.currentTime = words[i].startTime;
+        setCurrentTime(words[i].startTime);
+        return;
+      }
+    }
+    // If after all words, go to end
+    audio.currentTime = audio.duration;
+    setCurrentTime(audio.duration);
   };
 
   const handleSeek = (time: number) => {
