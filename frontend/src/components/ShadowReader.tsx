@@ -142,12 +142,14 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
     const audio = audioRef.current;
     if (!audio) return;
 
-    if (isPlaying) {
-      audio.pause();
-    } else {
+    // Use audio.paused to check actual state, not isPlaying
+    if (audio.paused) {
       audio.play();
+      setIsPlaying(true);
+    } else {
+      audio.pause();
+      setIsPlaying(false);
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleSkipBackward = () => {
@@ -156,17 +158,37 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
     const words = content.words;
     const time = audio.currentTime;
 
-    // Find the current word and go to its startTime
+    // Find the current word index
+    let currentWordIndex = -1;
     for (let i = words.length - 1; i >= 0; i--) {
       if (time >= words[i].startTime) {
-        audio.currentTime = words[i].startTime;
-        setCurrentTime(words[i].startTime);
-        return;
+        currentWordIndex = i;
+        break;
       }
     }
-    // If before all words, go to start
-    audio.currentTime = 0;
-    setCurrentTime(0);
+
+    // Go to the previous word if we're already at the start of current word,
+    // otherwise go to the start of current word
+    const threshold = 0.3; // If within 0.3s of word start, go to previous word
+    let targetIndex: number;
+    if (currentWordIndex > 0 && time - words[currentWordIndex].startTime < threshold) {
+      // Go to previous word
+      targetIndex = currentWordIndex - 1;
+    } else if (currentWordIndex >= 0) {
+      // Go to start of current word
+      targetIndex = currentWordIndex;
+    } else {
+      // If before all words, go to start
+      audio.currentTime = 0;
+      setCurrentTime(0);
+      lastPausedAtIndexRef.current = null;
+      return;
+    }
+
+    audio.currentTime = words[targetIndex].startTime;
+    setCurrentTime(words[targetIndex].startTime);
+    // Set to target index so this word is allowed to play fully
+    lastPausedAtIndexRef.current = targetIndex;
   };
 
   const handleSkipForward = () => {
@@ -180,6 +202,8 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
       if (words[i].startTime > time) {
         audio.currentTime = words[i].startTime;
         setCurrentTime(words[i].startTime);
+        // Set to target index so this word is allowed to play fully
+        lastPausedAtIndexRef.current = i;
         return;
       }
     }
