@@ -157,6 +157,10 @@ export default function TextDisplay({ words, currentTime }: TextDisplayProps) {
           }}
         >
           {selectedWord.translation}
+          {/* Arrow pointing down */}
+          <span
+            className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-zinc-800 dark:border-t-zinc-200"
+          />
         </span>
       )}
 
