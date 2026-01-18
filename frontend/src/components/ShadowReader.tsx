@@ -30,6 +30,7 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
   const [currentRound, setCurrentRound] = useState(1);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [pauseAtPhraseEnd, setPauseAtPhraseEnd] = useState(false);
+  const [blurText, setBlurText] = useState(false);
   // Refs to always have latest values in event handlers
   const loopModeRef = useRef(loopMode);
   const currentRoundRef = useRef(currentRound);
@@ -240,6 +241,10 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
     lastPausedAtIndexRef.current = null;
   };
 
+  const handleBlurTextToggle = () => {
+    setBlurText((prev) => !prev);
+  };
+
   return (
     <div className="min-h-screen pb-32">
       {/* Hidden audio element */}
@@ -256,7 +261,7 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
 
       {/* Text content */}
       <main className="max-w-3xl mx-auto p-6 md:p-12">
-        <TextDisplay words={content.words} currentTime={currentTime} />
+        <TextDisplay words={content.words} currentTime={currentTime} blurText={blurText} />
       </main>
 
       {/* Audio controls */}
@@ -267,6 +272,7 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
         loopMode={loopMode}
         playbackSpeed={playbackSpeed}
         pauseAtPhraseEnd={pauseAtPhraseEnd}
+        blurText={blurText}
         onPlayPause={handlePlayPause}
         onSkipBackward={handleSkipBackward}
         onSkipForward={handleSkipForward}
@@ -274,6 +280,7 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
         onLoopToggle={handleLoopToggle}
         onSpeedChange={handleSpeedChange}
         onPauseAtPhraseEndToggle={handlePauseAtPhraseEndToggle}
+        onBlurTextToggle={handleBlurTextToggle}
       />
     </div>
   );

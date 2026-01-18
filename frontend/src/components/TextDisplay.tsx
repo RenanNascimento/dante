@@ -6,6 +6,7 @@ import { WordTiming } from "@/data/mockContent";
 interface TextDisplayProps {
   words: WordTiming[];
   currentTime: number;
+  blurText?: boolean;
 }
 
 interface TooltipStyle {
@@ -14,7 +15,7 @@ interface TooltipStyle {
   transform: string;
 }
 
-export default function TextDisplay({ words, currentTime }: TextDisplayProps) {
+export default function TextDisplay({ words, currentTime, blurText = false }: TextDisplayProps) {
   const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(null);
   const [tooltipStyle, setTooltipStyle] = useState<TooltipStyle | null>(null);
   const tooltipRef = useRef<HTMLSpanElement | null>(null);
@@ -131,11 +132,11 @@ export default function TextDisplay({ words, currentTime }: TextDisplayProps) {
             <span
               data-word-index={idx}
               onClick={(e) => handleWordClick(idx, e)}
-              className={`transition-colors duration-150 ${
+              className={`transition-all duration-150 ${
                 isActive
                   ? "bg-yellow-300 dark:bg-yellow-500 dark:text-black rounded px-1"
                   : ""
-              } ${hasTranslation ? 'cursor-pointer hover:underline decoration-dotted underline-offset-4' : ''} ${isSelected ? 'underline decoration-solid' : ''}`}
+              } ${hasTranslation ? 'cursor-pointer hover:underline decoration-dotted underline-offset-4' : ''} ${isSelected ? 'underline decoration-solid' : ''} ${blurText ? 'blur-[6px]' : ''}`}
             >
               {w.word}
             </span>

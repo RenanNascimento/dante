@@ -11,6 +11,7 @@ interface AudioControlsProps {
   loopMode: LoopMode;
   playbackSpeed: number;
   pauseAtPhraseEnd: boolean;
+  blurText: boolean;
   onPlayPause: () => void;
   onSkipBackward: () => void;
   onSkipForward: () => void;
@@ -18,6 +19,7 @@ interface AudioControlsProps {
   onLoopToggle: () => void;
   onSpeedChange: (speed: number) => void;
   onPauseAtPhraseEndToggle: () => void;
+  onBlurTextToggle: () => void;
 }
 
 function formatTime(seconds: number): string {
@@ -43,6 +45,7 @@ export default function AudioControls({
   loopMode,
   playbackSpeed,
   pauseAtPhraseEnd,
+  blurText,
   onPlayPause,
   onSkipBackward,
   onSkipForward,
@@ -50,6 +53,7 @@ export default function AudioControls({
   onLoopToggle,
   onSpeedChange,
   onPauseAtPhraseEndToggle,
+  onBlurTextToggle,
 }: AudioControlsProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -71,7 +75,7 @@ export default function AudioControls({
   };
 
   // Check if any setting is active to show indicator on settings button
-  const hasActiveSettings = loopMode > 0 || pauseAtPhraseEnd || playbackSpeed !== 1;
+  const hasActiveSettings = loopMode > 0 || pauseAtPhraseEnd || playbackSpeed !== 1 || blurText;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-700 p-4 shadow-lg">
@@ -246,6 +250,17 @@ export default function AudioControls({
                   <span>Pause per word</span>
                   <span className={`font-semibold ${pauseAtPhraseEnd ? "text-blue-600 dark:text-blue-400" : ""}`}>
                     {pauseAtPhraseEnd ? "On" : "Off"}
+                  </span>
+                </button>
+
+                {/* Blur text toggle */}
+                <button
+                  onClick={onBlurTextToggle}
+                  className="w-full px-4 py-3 text-sm text-left transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center justify-between border-t border-zinc-200 dark:border-zinc-700"
+                >
+                  <span>Blur text</span>
+                  <span className={`font-semibold ${blurText ? "text-blue-600 dark:text-blue-400" : ""}`}>
+                    {blurText ? "On" : "Off"}
                   </span>
                 </button>
               </div>
