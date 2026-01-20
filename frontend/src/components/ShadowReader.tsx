@@ -246,7 +246,7 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
   };
 
   return (
-    <div className="min-h-screen pb-32">
+    <div className="min-h-screen pb-44">
       {/* Hidden audio element */}
       <audio ref={audioRef} src={content.audioUrl} preload="metadata" />
 
