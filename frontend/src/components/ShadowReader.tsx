@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { ReadingContent } from "@/data/mockContent";
 import TextDisplay from "./TextDisplay";
-import AudioControls, { LoopMode } from "./AudioControls";
+import AudioControls, { LoopMode, HiddenWordsPercent } from "./AudioControls";
 import ThemeToggle from "./ThemeToggle";
 
 interface ShadowReaderProps {
@@ -31,6 +31,8 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [pauseAtPhraseEnd, setPauseAtPhraseEnd] = useState(false);
   const [blurText, setBlurText] = useState(false);
+  const [hiddenWordsPercent, setHiddenWordsPercent] = useState<HiddenWordsPercent>(0);
+  const [hiddenWordsSeed, setHiddenWordsSeed] = useState(0);
   // Refs to always have latest values in event handlers
   const loopModeRef = useRef(loopMode);
   const currentRoundRef = useRef(currentRound);
@@ -245,6 +247,12 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
     setBlurText((prev) => !prev);
   };
 
+  const handleHiddenWordsChange = () => {
+    setHiddenWordsPercent((prev) => prev === 0 ? 10 : 0);
+    // Change seed to randomize which words are hidden
+    setHiddenWordsSeed(Date.now());
+  };
+
   return (
     <div className="min-h-screen pb-44">
       {/* Hidden audio element */}
@@ -261,7 +269,7 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
 
       {/* Text content */}
       <main className="max-w-3xl mx-auto p-6 md:p-12">
-        <TextDisplay words={content.words} currentTime={currentTime} blurText={blurText} />
+        <TextDisplay words={content.words} currentTime={currentTime} blurText={blurText} hiddenWordsPercent={hiddenWordsPercent} hiddenWordsSeed={hiddenWordsSeed} />
       </main>
 
       {/* Audio controls */}
@@ -273,6 +281,7 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
         playbackSpeed={playbackSpeed}
         pauseAtPhraseEnd={pauseAtPhraseEnd}
         blurText={blurText}
+        hiddenWordsPercent={hiddenWordsPercent}
         onPlayPause={handlePlayPause}
         onSkipBackward={handleSkipBackward}
         onSkipForward={handleSkipForward}
@@ -281,6 +290,7 @@ export default function ShadowReader({ content }: ShadowReaderProps) {
         onSpeedChange={handleSpeedChange}
         onPauseAtPhraseEndToggle={handlePauseAtPhraseEndToggle}
         onBlurTextToggle={handleBlurTextToggle}
+        onHiddenWordsChange={handleHiddenWordsChange}
       />
     </div>
   );

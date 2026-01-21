@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 
 export type LoopMode = 0 | 1 | 2 | 3 | 4;
+export type HiddenWordsPercent = 0 | 10;
 
 interface AudioControlsProps {
   isPlaying: boolean;
@@ -12,6 +13,7 @@ interface AudioControlsProps {
   playbackSpeed: number;
   pauseAtPhraseEnd: boolean;
   blurText: boolean;
+  hiddenWordsPercent: HiddenWordsPercent;
   onPlayPause: () => void;
   onSkipBackward: () => void;
   onSkipForward: () => void;
@@ -20,6 +22,7 @@ interface AudioControlsProps {
   onSpeedChange: (speed: number) => void;
   onPauseAtPhraseEndToggle: () => void;
   onBlurTextToggle: () => void;
+  onHiddenWordsChange: () => void;
 }
 
 function formatTime(seconds: number): string {
@@ -38,6 +41,10 @@ function getLoopLabel(mode: LoopMode): string {
   }
 }
 
+function getHiddenWordsLabel(percent: HiddenWordsPercent): string {
+  return percent === 0 ? "Off" : "On";
+}
+
 export default function AudioControls({
   isPlaying,
   currentTime,
@@ -46,6 +53,7 @@ export default function AudioControls({
   playbackSpeed,
   pauseAtPhraseEnd,
   blurText,
+  hiddenWordsPercent,
   onPlayPause,
   onSkipBackward,
   onSkipForward,
@@ -54,6 +62,7 @@ export default function AudioControls({
   onSpeedChange,
   onPauseAtPhraseEndToggle,
   onBlurTextToggle,
+  onHiddenWordsChange,
 }: AudioControlsProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -75,7 +84,7 @@ export default function AudioControls({
   };
 
   // Check if any setting is active to show indicator on settings button
-  const hasActiveSettings = loopMode > 0 || pauseAtPhraseEnd || playbackSpeed !== 1 || blurText;
+  const hasActiveSettings = loopMode > 0 || pauseAtPhraseEnd || playbackSpeed !== 1 || blurText || hiddenWordsPercent > 0;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-700 p-4 shadow-lg">
@@ -261,6 +270,17 @@ export default function AudioControls({
                   <span>Blur text</span>
                   <span className={`font-semibold ${blurText ? "text-blue-600 dark:text-blue-400" : ""}`}>
                     {blurText ? "On" : "Off"}
+                  </span>
+                </button>
+
+                {/* Hidden words toggle */}
+                <button
+                  onClick={onHiddenWordsChange}
+                  className="w-full px-4 py-3 text-sm text-left transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center justify-between border-t border-zinc-200 dark:border-zinc-700"
+                >
+                  <span>Hidden words</span>
+                  <span className={`font-semibold ${hiddenWordsPercent > 0 ? "text-blue-600 dark:text-blue-400" : ""}`}>
+                    {getHiddenWordsLabel(hiddenWordsPercent)}
                   </span>
                 </button>
               </div>
