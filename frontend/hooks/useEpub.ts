@@ -288,6 +288,12 @@ export default function useEpub({ data, containerRef, initialCfi, initialFontSiz
           if (e.key === "ArrowLeft") rendition.prev();
         });
 
+        // Make iframe body tappable on iOS Safari (click events
+        // don't fire on non-interactive elements without this)
+        contents.document.body.style.cursor = "pointer";
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (contents.document.body.style as any).webkitTapHighlightColor = "transparent";
+
         // Helper: check if an element is inside an anchor tag
         const isLink = (target: EventTarget | null): boolean => {
           let el = target as HTMLElement | null;
@@ -298,19 +304,34 @@ export default function useEpub({ data, containerRef, initialCfi, initialFontSiz
           return false;
         };
 
-        const hasSelection = (): boolean => {
-          const sel = contents.document.getSelection();
-          return !!(sel && sel.toString().length > 0);
-        };
+        // Tap & swipe navigation via pointer events (reliable on iPad)
+        let pointerDownX = 0;
+        let pointerDownY = 0;
+        let pointerDownTime = 0;
 
-        // Tap navigation via click (works on both desktop and iPad)
-        contents.document.addEventListener("click", (e: MouseEvent) => {
+        contents.document.addEventListener("pointerdown", (e: PointerEvent) => {
+          pointerDownX = e.clientX;
+          pointerDownY = e.clientY;
+          pointerDownTime = Date.now();
+        }, true);
+
+        contents.document.addEventListener("pointerup", (e: PointerEvent) => {
+          const dx = Math.abs(e.clientX - pointerDownX);
+          const dy = Math.abs(e.clientY - pointerDownY);
+          const dt = Date.now() - pointerDownTime;
+
+          // Only quick taps with little movement
+          if (dx > 10 || dy > 10 || dt > 300) return;
+          // Don't navigate when tapping links
           if (isLink(e.target)) return;
-          if (hasSelection()) return;
+          // Don't navigate when there's a text selection
+          const sel = contents.document.getSelection();
+          if (sel && sel.toString().length > 0) return;
+
           const width = contents.document.documentElement.clientWidth;
           if (e.clientX > width * 0.75) rendition.next();
           else if (e.clientX < width * 0.25) rendition.prev();
-        });
+        }, true);
 
         // Swipe navigation via touch
         let touchStartX = 0;
