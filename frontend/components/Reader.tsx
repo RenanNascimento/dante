@@ -51,7 +51,7 @@ export default function Reader({ data, onClose }: ReaderProps) {
 
   if (!loaded) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-black">
+      <div className="h-dvh w-screen flex items-center justify-center bg-black">
         <span className="text-zinc-500">Loading...</span>
       </div>
     );
@@ -189,7 +189,7 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
   }, [goNext, goPrev]);
 
   return (
-    <div className={`h-screen w-screen flex flex-col relative transition-colors ${
+    <div className={`h-dvh w-screen flex flex-col relative transition-colors ${
       theme === "dark" ? "bg-black" : "bg-[#faf5ee]"
     }`}>
       {/* Header */}

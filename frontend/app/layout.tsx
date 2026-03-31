@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${literata.variable} h-full`}>
-      <body className="bg-black text-white min-h-full font-[family-name:var(--font-literata)]">
+      <body className="bg-black text-white h-full overflow-hidden font-[family-name:var(--font-literata)]">
         {children}
       </body>
     </html>
