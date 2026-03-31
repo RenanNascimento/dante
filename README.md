@@ -1,6 +1,6 @@
-# Dante - Shadow Reader
+# Dante - EPUB Reader
 
-A shadow reading application where users read text while listening to audio, with real-time word highlighting synchronized to playback.
+An EPUB reader application with text-to-speech playback and dictionary lookup, built with Next.js and epubjs.
 
 ## Project Structure
 
@@ -8,13 +8,12 @@ A shadow reading application where users read text while listening to audio, wit
 dante/
 ├── pants.toml              # Pants build system configuration
 ├── BUILD                   # Root BUILD file
-├── frontend/               # Next.js application
+├── frontend/               # Next.js EPUB reader application
 │   ├── BUILD
 │   ├── package.json
-│   └── src/
-│       ├── app/
-│       ├── components/
-│       └── data/
+│   ├── app/                # Next.js app router pages & API routes
+│   ├── components/         # React components
+│   └── hooks/              # Custom React hooks
 ├── backend/                # FastAPI Python backend
 │   ├── BUILD
 │   ├── requirements.txt
@@ -28,7 +27,7 @@ dante/
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - Python 3.11
 - [Pants](https://www.pantsbuild.org/) build system
 
@@ -44,15 +43,9 @@ export PATH="$HOME/.local/bin:$PATH"
 ### Frontend (Next.js)
 
 ```bash
-# Using npm directly
 cd frontend && npm install
-cd frontend && npm run dev
-
-# Using Pants
-pants run frontend:install   # Install dependencies
-pants run frontend:dev       # Start dev server at http://localhost:3000
-pants run frontend:build     # Build for production
-pants run frontend:lint      # Run ESLint
+cp .env.example .env.local   # Then fill in your API keys
+npm run dev                   # Start dev server at http://localhost:3000
 ```
 
 ### Backend (FastAPI)
@@ -66,62 +59,37 @@ cd backend
 python -m uvicorn src.api.main:app --reload --port 8000
 ```
 
-## Pants Commands
+## Environment Variables
 
-### General
+The frontend requires environment variables for full functionality. See `frontend/.env.example`:
 
-```bash
-pants list ::                # List all targets in the monorepo
-pants list backend/::        # List all backend targets
-pants list frontend/::       # List all frontend targets
-```
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GOOGLE_TTS_API_KEY` | Yes | Google Cloud Text-to-Speech API key |
+| `GEMINI_API_KEY` | Yes | Google Gemini API key |
+| `GOOGLE_TTS_VOICE` | No | Override default TTS voice (default: `en-US-Neural2-D`) |
 
-### Python (Backend)
+## API Routes (Frontend)
 
-```bash
-pants check backend/::       # Type check with MyPy
-pants lint backend/::        # Lint with Black and isort
-pants fmt backend/::         # Format code with Black and isort
-pants test backend/::        # Run pytest tests
-pants package backend/src/api:server   # Build PEX binary
-```
-
-### Lock Files
-
-```bash
-pants generate-lockfiles     # Regenerate Python lock file
-```
-
-## API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Health check |
-| `/api/content/{id}` | GET | Get reading content by ID |
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/api/tts` | POST | Text-to-speech synthesis via Google Cloud TTS |
+| `/api/lookup` | GET | Dictionary word lookup |
 
 ## Deployment
 
-### GitHub Pages (Frontend)
+### Vercel (Frontend)
 
-The frontend is automatically deployed to GitHub Pages on every push to `main`.
+The frontend deploys to Vercel automatically on push to `main`.
 
-**Live URL:** https://RenanNascimento.github.io/dante
-
-The deployment workflow:
-1. Builds the Next.js app with static export
-2. Uploads to GitHub Pages
-3. Available at the URL above
-
-### Manual Deployment
-
-```bash
-cd frontend
-npm run build    # Creates static export in 'out/' directory
-```
+To set up:
+1. Connect the repo to Vercel
+2. Set **Root Directory** to `frontend`
+3. Add environment variables (`GOOGLE_TTS_API_KEY`, `GEMINI_API_KEY`)
 
 ## Tech Stack
 
-- **Frontend**: Next.js 16, React, TypeScript, Tailwind CSS
+- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS, epubjs
 - **Backend**: FastAPI, Python 3.11, Pydantic
 - **Build System**: Pants
-- **CI/CD**: GitHub Actions
+- **Deployment**: Vercel
