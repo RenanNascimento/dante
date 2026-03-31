@@ -237,17 +237,6 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
           </div>
         )}
         <div ref={containerRef} className="w-full h-full" />
-        {/* Tap zones for page navigation (iPad / touch devices) */}
-        <div
-          className="absolute left-0 top-0 w-[25%] h-full z-10"
-          onClick={goPrev}
-          aria-label="Previous page"
-        />
-        <div
-          className="absolute right-0 top-0 w-[25%] h-full z-10"
-          onClick={goNext}
-          aria-label="Next page"
-        />
       </div>
 
       {/* Selection tooltip */}

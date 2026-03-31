@@ -288,7 +288,31 @@ export default function useEpub({ data, containerRef, initialCfi, initialFontSiz
           if (e.key === "ArrowLeft") rendition.prev();
         });
 
-        // Swipe navigation inside the iframe (for swipes starting in center area)
+        // Helper: check if an element is inside an anchor tag
+        const isLink = (target: EventTarget | null): boolean => {
+          let el = target as HTMLElement | null;
+          while (el) {
+            if (el.tagName === "A") return true;
+            el = el.parentElement;
+          }
+          return false;
+        };
+
+        const hasSelection = (): boolean => {
+          const sel = contents.document.getSelection();
+          return !!(sel && sel.toString().length > 0);
+        };
+
+        // Tap navigation via click (works on both desktop and iPad)
+        contents.document.addEventListener("click", (e: MouseEvent) => {
+          if (isLink(e.target)) return;
+          if (hasSelection()) return;
+          const width = contents.document.documentElement.clientWidth;
+          if (e.clientX > width * 0.75) rendition.next();
+          else if (e.clientX < width * 0.25) rendition.prev();
+        });
+
+        // Swipe navigation via touch
         let touchStartX = 0;
         let touchStartY = 0;
         let touchStartTime = 0;
