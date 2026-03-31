@@ -288,6 +288,42 @@ export default function useEpub({ data, containerRef, initialCfi, initialFontSiz
           if (e.key === "ArrowLeft") rendition.prev();
         });
 
+        // Touch/tap navigation for iPad and mobile
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchStartTime = 0;
+        const iframeDoc = contents.document;
+
+        iframeDoc.addEventListener("touchstart", (e: TouchEvent) => {
+          touchStartX = e.changedTouches[0].clientX;
+          touchStartY = e.changedTouches[0].clientY;
+          touchStartTime = Date.now();
+        }, { passive: true });
+
+        iframeDoc.addEventListener("touchend", (e: TouchEvent) => {
+          const touch = e.changedTouches[0];
+          const dx = touch.clientX - touchStartX;
+          const dy = touch.clientY - touchStartY;
+          const dt = Date.now() - touchStartTime;
+          const absDx = Math.abs(dx);
+          const absDy = Math.abs(dy);
+
+          // Swipe: horizontal > 50px, more horizontal than vertical, < 500ms
+          if (absDx > 50 && absDx > absDy * 1.5 && dt < 500) {
+            if (dx < 0) rendition.next();
+            else rendition.prev();
+            return;
+          }
+
+          // Edge tap: quick tap with little movement
+          if (absDx < 10 && absDy < 10 && dt < 300) {
+            const width = iframeDoc.documentElement.clientWidth;
+            const x = touch.clientX;
+            if (x > width * 0.7) rendition.next();
+            else if (x < width * 0.3) rendition.prev();
+          }
+        }, { passive: true });
+
         // Inject initial theme styles
         const t = themeRef.current;
         const css = t === "dark"

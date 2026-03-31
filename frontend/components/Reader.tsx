@@ -163,6 +163,31 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
+  // Swipe navigation on outer container (fallback for touches outside iframe)
+  const touchRef = useRef({ x: 0, y: 0, time: 0 });
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchRef.current = {
+      x: e.changedTouches[0].clientX,
+      y: e.changedTouches[0].clientY,
+      time: Date.now(),
+    };
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    const { x, y, time } = touchRef.current;
+    const dx = e.changedTouches[0].clientX - x;
+    const dy = e.changedTouches[0].clientY - y;
+    const dt = Date.now() - time;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+
+    if (absDx > 50 && absDx > absDy * 1.5 && dt < 500) {
+      if (dx < 0) goNext();
+      else goPrev();
+    }
+  }, [goNext, goPrev]);
+
   return (
     <div className={`h-screen w-screen flex flex-col relative transition-colors ${
       theme === "dark" ? "bg-black" : "bg-[#faf5ee]"
@@ -205,7 +230,7 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
       )}
 
       {/* Book container */}
-      <div className="flex-1 relative min-h-0">
+      <div className="flex-1 relative min-h-0" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         {!isReady && (
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-zinc-500">Loading...</span>
