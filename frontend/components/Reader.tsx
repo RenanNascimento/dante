@@ -230,13 +230,24 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
       )}
 
       {/* Book container */}
-      <div className="flex-1 relative min-h-0" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      <div className="flex-1 relative min-h-0 touch-manipulation" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         {!isReady && (
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-zinc-500">Loading...</span>
           </div>
         )}
         <div ref={containerRef} className="w-full h-full" />
+        {/* Tap zones for page navigation (iPad / touch devices) */}
+        <div
+          className="absolute left-0 top-0 w-[25%] h-full z-10"
+          onClick={goPrev}
+          aria-label="Previous page"
+        />
+        <div
+          className="absolute right-0 top-0 w-[25%] h-full z-10"
+          onClick={goNext}
+          aria-label="Next page"
+        />
       </div>
 
       {/* Selection tooltip */}
