@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { MenuIcon, CloseIcon, HomeIcon, BookIcon, ClockIcon } from "@/assets/icons";
 
 interface SidebarProps {
   currentView: "home" | "reader" | "annotation";
@@ -29,20 +30,7 @@ export default function Sidebar({
         className="fixed top-4 left-4 z-50 p-2 bg-white dark:bg-zinc-800 rounded-lg shadow-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
         aria-label="Open menu"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="w-5 h-5"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-          />
-        </svg>
+        <MenuIcon className="w-5 h-5" />
       </button>
 
       {/* Overlay */}
@@ -67,20 +55,7 @@ export default function Sidebar({
             className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
             aria-label="Close menu"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-5 h-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <CloseIcon className="w-5 h-5" />
           </button>
         </div>
 
@@ -98,20 +73,7 @@ export default function Sidebar({
                 : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
             }`}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-5 h-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
-              />
-            </svg>
+            <HomeIcon className="w-5 h-5" />
             <span className="font-medium">Home</span>
           </button>
 
@@ -128,20 +90,7 @@ export default function Sidebar({
                   : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
               }`}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
-                />
-              </svg>
+              <BookIcon className="w-5 h-5" />
               <div className="text-left min-w-0">
                 <span className="font-medium block truncate">
                   {readingTitle || "Current Reading"}
@@ -162,20 +111,7 @@ export default function Sidebar({
                 : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
             }`}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-5 h-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <ClockIcon className="w-5 h-5" />
             <span className="font-medium">Time Annotation</span>
           </button>
         </nav>
