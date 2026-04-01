@@ -199,13 +199,13 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
         );
         const anchor = el?.closest("a");
         if (anchor) {
-          if (anchor.onclick) {
-            anchor.click();
-            return;
-          }
           const href = anchor.getAttribute("href");
-          if (href?.startsWith("http")) {
-            window.open(href, "_blank");
+          if (href) {
+            if (href.startsWith("http")) {
+              window.open(href, "_blank");
+            } else {
+              renditionRef.current?.display(href);
+            }
             return;
           }
         }
@@ -213,7 +213,7 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
       if (direction === "next") goNext();
       else goPrev();
     },
-    [goNext, goPrev]
+    [goNext, goPrev, renditionRef]
   );
 
   return (
