@@ -188,6 +188,34 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
     }
   }, [goNext, goPrev]);
 
+  const handleOverlayTap = useCallback(
+    (e: React.MouseEvent, direction: "next" | "prev") => {
+      const iframe = containerRef.current?.querySelector("iframe");
+      if (iframe?.contentDocument) {
+        const rect = iframe.getBoundingClientRect();
+        const el = iframe.contentDocument.elementFromPoint(
+          e.clientX - rect.left,
+          e.clientY - rect.top
+        );
+        const anchor = el?.closest("a");
+        if (anchor) {
+          if (anchor.onclick) {
+            anchor.click();
+            return;
+          }
+          const href = anchor.getAttribute("href");
+          if (href?.startsWith("http")) {
+            window.open(href, "_blank");
+            return;
+          }
+        }
+      }
+      if (direction === "next") goNext();
+      else goPrev();
+    },
+    [goNext, goPrev]
+  );
+
   return (
     <div className={`h-dvh w-screen flex flex-col relative transition-colors ${
       theme === "dark" ? "bg-black" : "bg-[#faf5ee]"
@@ -237,6 +265,20 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
           </div>
         )}
         <div ref={containerRef} className="w-full h-full" />
+        {isReady && (
+          <>
+            <div
+              className="absolute top-0 left-0 w-1/4 h-full z-10"
+              onClick={(e) => handleOverlayTap(e, "prev")}
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            />
+            <div
+              className="absolute top-0 right-0 w-1/4 h-full z-10"
+              onClick={(e) => handleOverlayTap(e, "next")}
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            />
+          </>
+        )}
       </div>
 
       {/* Selection tooltip */}
