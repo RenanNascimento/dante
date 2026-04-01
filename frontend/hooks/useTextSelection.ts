@@ -97,53 +97,44 @@ export default function useTextSelection({ contentsRef, containerRef, contentsVe
       }
     };
 
-    // iOS: selectionchange fires on long-press selection (dblclick/mouseup don't)
-    let selTimer: ReturnType<typeof setTimeout>;
-    let programmaticClear = false;
+    doc.addEventListener("dblclick", onDblClick);
+    doc.addEventListener("mouseup", onMouseUp);
+    doc.addEventListener("click", onClick);
 
-    const onSelectionChange = () => {
-      if (programmaticClear) {
-        programmaticClear = false;
-        return;
-      }
-      clearTimeout(selTimer);
-      selTimer = setTimeout(() => {
+    // iOS Safari: selectionchange doesn't fire on iframe documents, and
+    // dblclick/mouseup don't fire on touch. Poll the iframe selection
+    // instead. When the same text is seen twice (~600ms stable), capture
+    // it, clear the native selection (dismisses iOS menu), and show our
+    // tooltip.
+    let pollId: ReturnType<typeof setInterval> | undefined;
+    if (isTouchDevice) {
+      let lastText = "";
+      pollId = setInterval(() => {
         if (skipNextRef.current) {
           skipNextRef.current = false;
           return;
         }
+        const sel = doc.getSelection();
+        const text = sel?.toString().trim() || "";
 
-        const pos = getTooltipPos();
-        if (!pos) {
-          setSelection(null);
+        if (text && text === lastText) {
+          const pos = getTooltipPos();
+          if (pos) {
+            sel!.removeAllRanges();
+            setSelection(pos);
+          }
+          lastText = "";
           return;
         }
-
-        // On touch devices, clear native selection to dismiss the iOS
-        // context menu (Copy / Look Up / Translate). Our tooltip replaces it.
-        if (isTouchDevice) {
-          const sel = doc.getSelection();
-          if (sel) {
-            programmaticClear = true;
-            sel.removeAllRanges();
-          }
-        }
-
-        setSelection(pos);
+        lastText = text;
       }, 300);
-    };
-
-    doc.addEventListener("dblclick", onDblClick);
-    doc.addEventListener("mouseup", onMouseUp);
-    doc.addEventListener("click", onClick);
-    doc.addEventListener("selectionchange", onSelectionChange);
+    }
 
     return () => {
-      clearTimeout(selTimer);
+      if (pollId) clearInterval(pollId);
       doc.removeEventListener("dblclick", onDblClick);
       doc.removeEventListener("mouseup", onMouseUp);
       doc.removeEventListener("click", onClick);
-      doc.removeEventListener("selectionchange", onSelectionChange);
     };
   }, [contentsRef, containerRef, contentsVersion]);
 
