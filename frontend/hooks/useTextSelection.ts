@@ -12,10 +12,10 @@ interface UseTextSelectionOptions {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   contentsRef: React.RefObject<any>;
   containerRef: React.RefObject<HTMLDivElement | null>;
-  isReady: boolean;
+  contentsVersion: number;
 }
 
-export default function useTextSelection({ contentsRef, containerRef, isReady }: UseTextSelectionOptions) {
+export default function useTextSelection({ contentsRef, containerRef, contentsVersion }: UseTextSelectionOptions) {
   const [selection, setSelection] = useState<SelectionState | null>(null);
   const skipNextRef = useRef(false);
 
@@ -32,69 +32,120 @@ export default function useTextSelection({ contentsRef, containerRef, isReady }:
     const doc = contents?.document as Document | undefined;
     if (!doc) return;
 
-    // selectionchange fires on all platforms: desktop dblclick/drag AND
-    // iOS long-press. Debounce so the tooltip only appears once the
-    // selection stabilises.
-    let timer: ReturnType<typeof setTimeout>;
-    let programmaticClear = false;
     const isTouchDevice = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+
+    const getTooltipPos = () => {
+      const sel = doc.getSelection();
+      if (!sel || sel.rangeCount === 0) return null;
+
+      const text = sel.toString().trim();
+      if (!text) return null;
+
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      const container = containerRef.current;
+      if (!container) return null;
+
+      const iframe = container.querySelector("iframe");
+      if (!iframe) return null;
+
+      const iframeRect = iframe.getBoundingClientRect();
+
+      return {
+        text,
+        x: iframeRect.left + rect.left + rect.width / 2,
+        y: iframeRect.top + rect.bottom,
+      };
+    };
+
+    // Desktop: double-click selects a word
+    const onDblClick = () => {
+      if (skipNextRef.current) {
+        skipNextRef.current = false;
+        return;
+      }
+      setTimeout(() => {
+        const pos = getTooltipPos();
+        if (pos) setSelection(pos);
+        else setSelection(null);
+      }, 10);
+    };
+
+    // Desktop: drag selection
+    const onMouseUp = () => {
+      if (skipNextRef.current) {
+        skipNextRef.current = false;
+        return;
+      }
+      setTimeout(() => {
+        const sel = doc.getSelection();
+        const text = sel?.toString().trim();
+        // Only trigger for drag selections (multi-char), not single clicks
+        if (!text || (text.split(/\s+/).length < 2 && text.length < 3)) return;
+        const pos = getTooltipPos();
+        if (pos) setSelection(pos);
+      }, 10);
+    };
+
+    // Click elsewhere dismisses tooltip
+    const onClick = () => {
+      if (skipNextRef.current) return;
+      const sel = doc.getSelection();
+      const text = sel?.toString().trim();
+      if (!text) {
+        setSelection(null);
+      }
+    };
+
+    // iOS: selectionchange fires on long-press selection (dblclick/mouseup don't)
+    let selTimer: ReturnType<typeof setTimeout>;
+    let programmaticClear = false;
 
     const onSelectionChange = () => {
       if (programmaticClear) {
         programmaticClear = false;
         return;
       }
-
-      clearTimeout(timer);
-      timer = setTimeout(() => {
+      clearTimeout(selTimer);
+      selTimer = setTimeout(() => {
         if (skipNextRef.current) {
           skipNextRef.current = false;
           return;
         }
 
-        const sel = doc.getSelection();
-        if (!sel || sel.rangeCount === 0) {
+        const pos = getTooltipPos();
+        if (!pos) {
           setSelection(null);
           return;
         }
-
-        const text = sel.toString().trim();
-        if (!text) {
-          setSelection(null);
-          return;
-        }
-
-        const range = sel.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        const container = containerRef.current;
-        if (!container) return;
-
-        const iframe = container.querySelector("iframe");
-        if (!iframe) return;
-
-        const iframeRect = iframe.getBoundingClientRect();
 
         // On touch devices, clear native selection to dismiss the iOS
         // context menu (Copy / Look Up / Translate). Our tooltip replaces it.
         if (isTouchDevice) {
-          programmaticClear = true;
-          sel.removeAllRanges();
+          const sel = doc.getSelection();
+          if (sel) {
+            programmaticClear = true;
+            sel.removeAllRanges();
+          }
         }
 
-        setSelection({
-          text,
-          x: iframeRect.left + rect.left + rect.width / 2,
-          y: iframeRect.top + rect.bottom,
-        });
+        setSelection(pos);
       }, 300);
     };
 
+    doc.addEventListener("dblclick", onDblClick);
+    doc.addEventListener("mouseup", onMouseUp);
+    doc.addEventListener("click", onClick);
     doc.addEventListener("selectionchange", onSelectionChange);
+
     return () => {
-      clearTimeout(timer);
+      clearTimeout(selTimer);
+      doc.removeEventListener("dblclick", onDblClick);
+      doc.removeEventListener("mouseup", onMouseUp);
+      doc.removeEventListener("click", onClick);
       doc.removeEventListener("selectionchange", onSelectionChange);
     };
-  }, [contentsRef, containerRef, isReady]);
+  }, [contentsRef, containerRef, contentsVersion]);
 
   return { selection, dismiss, skipNext };
 }

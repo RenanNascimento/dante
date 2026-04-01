@@ -73,7 +73,7 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
   const [speakingRate, setSpeakingRate] = useState(settings.initialSpeakingRate);
   const [lookup, setLookup] = useState<LookupState | null>(null);
 
-  const { progress, currentPage, totalPages, currentCfi, goNext, goPrev, goToPage, title, isReady, fontSize, setFontSize, theme, setTheme, getPageText, getPageParagraphs, prepareHighlighting, highlightWord, clearHighlight, contentsRef, renditionRef } = useEpub({
+  const { progress, currentPage, totalPages, currentCfi, goNext, goPrev, goToPage, title, isReady, fontSize, setFontSize, theme, setTheme, getPageText, getPageParagraphs, prepareHighlighting, highlightWord, clearHighlight, contentsVersion, contentsRef, renditionRef } = useEpub({
     data,
     containerRef,
     initialCfi: settings.initialCfi,
@@ -97,7 +97,7 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
   const { selection, dismiss: dismissSelection, skipNext } = useTextSelection({
     contentsRef,
     containerRef,
-    isReady,
+    contentsVersion,
   });
 
   const handleCopy = useCallback(() => {

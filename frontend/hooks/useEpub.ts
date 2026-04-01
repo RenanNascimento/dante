@@ -36,6 +36,7 @@ interface UseEpubReturn {
   prepareHighlighting: () => void;
   highlightWord: (index: number) => void;
   clearHighlight: () => void;
+  contentsVersion: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   contentsRef: React.RefObject<any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,6 +50,7 @@ export default function useEpub({ data, containerRef, initialCfi, initialFontSiz
   const [currentCfi, setCurrentCfi] = useState("");
   const [title, setTitle] = useState("");
   const [isReady, setIsReady] = useState(false);
+  const [contentsVersion, setContentsVersion] = useState(0);
   const [fontSize, setFontSize] = useState(initialFontSize);
   const [theme, setTheme] = useState<Theme>(initialTheme);
   const themeRef = useRef<Theme>(theme);
@@ -280,6 +282,7 @@ export default function useEpub({ data, containerRef, initialCfi, initialFontSiz
       // Inject Literata font + forward key events from iframe
       rendition.hooks.content.register((contents: { addStylesheet: (url: string) => void; document: Document }) => {
         contentsRef.current = contents;
+        setContentsVersion((v) => v + 1);
         contents.addStylesheet(
           "https://fonts.googleapis.com/css2?family=Literata:ital,wght@0,200..900;1,200..900&display=swap"
         );
@@ -404,5 +407,5 @@ export default function useEpub({ data, containerRef, initialCfi, initialFontSiz
     return () => window.removeEventListener("resize", handleResize);
   }, [containerRef]);
 
-  return { progress, currentPage, totalPages, currentCfi, goNext, goPrev, goToPage, title, isReady, fontSize, setFontSize, theme, setTheme, getPageText, getPageParagraphs, prepareHighlighting, highlightWord, clearHighlight, contentsRef, renditionRef };
+  return { progress, currentPage, totalPages, currentCfi, goNext, goPrev, goToPage, title, isReady, fontSize, setFontSize, theme, setTheme, getPageText, getPageParagraphs, prepareHighlighting, highlightWord, clearHighlight, contentsVersion, contentsRef, renditionRef };
 }
