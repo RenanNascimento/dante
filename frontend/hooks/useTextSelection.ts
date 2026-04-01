@@ -105,29 +105,44 @@ export default function useTextSelection({ contentsRef, containerRef, contentsVe
       }
     };
 
-    // iOS Safari: long-press triggers selectionchange on the main document
-    const onSelectionChange = () => {
-      if (skipNextRef.current) {
-        skipNextRef.current = false;
-        return;
-      }
-      const sel = doc.getSelection();
-      const text = sel?.toString().trim();
-      if (!text) return;
-      const pos = getTooltipPos();
-      if (pos) setSelection(pos);
-    };
-
     doc.addEventListener("dblclick", onDblClick);
     doc.addEventListener("mouseup", onMouseUp);
     doc.addEventListener("click", onClick);
-    doc.addEventListener("selectionchange", onSelectionChange);
+
+    // iOS Safari: selectionchange doesn't fire on iframe documents,
+    // and dblclick/mouseup don't fire on touch. Poll the iframe
+    // selection instead. With overlays hidden in select mode the
+    // native long-press works — we just need to detect when it settles.
+    const isTouchDevice = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+    let pollId: ReturnType<typeof setInterval> | undefined;
+    if (isTouchDevice) {
+      let lastText = "";
+      pollId = setInterval(() => {
+        if (skipNextRef.current) {
+          skipNextRef.current = false;
+          return;
+        }
+        const sel = doc.getSelection();
+        const text = sel?.toString().trim() || "";
+
+        if (text && text === lastText) {
+          const pos = getTooltipPos();
+          if (pos) {
+            sel!.removeAllRanges();
+            setSelection(pos);
+          }
+          lastText = "";
+          return;
+        }
+        lastText = text;
+      }, 300);
+    }
 
     return () => {
+      if (pollId) clearInterval(pollId);
       doc.removeEventListener("dblclick", onDblClick);
       doc.removeEventListener("mouseup", onMouseUp);
       doc.removeEventListener("click", onClick);
-      doc.removeEventListener("selectionchange", onSelectionChange);
     };
   }, [contentsRef, containerRef, contentsVersion, selectMode]);
 
