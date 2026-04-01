@@ -28,19 +28,19 @@ export default function SelectionTooltip({
       className={`fixed z-50 flex rounded-lg shadow-lg border ${bg} ${border} overflow-hidden`}
       style={{
         left: x,
-        top: y - 40,
+        top: y + 4,
         transform: "translateX(-50%)",
       }}
-      onMouseDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       <button
-        onMouseDown={(e) => { e.stopPropagation(); onDict(); }}
+        onPointerDown={(e) => { e.stopPropagation(); onDict(); }}
         className={`px-3 py-1.5 text-xs ${text} ${hover} transition-colors cursor-pointer`}
       >
         Dict
       </button>
       <button
-        onMouseDown={(e) => { e.stopPropagation(); onCopy(); }}
+        onPointerDown={(e) => { e.stopPropagation(); onCopy(); }}
         className={`px-3 py-1.5 text-xs ${text} ${hover} transition-colors cursor-pointer border-l ${border}`}
       >
         Copy
