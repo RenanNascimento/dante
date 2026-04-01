@@ -69,6 +69,7 @@ interface ReaderInnerProps {
 function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
   const [pausePerParagraph, setPausePerParagraph] = useState(settings.initialPausePerParagraph);
   const [speakingRate, setSpeakingRate] = useState(settings.initialSpeakingRate);
   const [lookup, setLookup] = useState<LookupState | null>(null);
@@ -98,6 +99,7 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
     contentsRef,
     containerRef,
     contentsVersion,
+    selectMode,
   });
 
   const handleCopy = useCallback(() => {
@@ -233,14 +235,30 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
         <span className={`text-sm truncate max-w-[60%] ${
           theme === "dark" ? "text-zinc-500" : "text-stone-400"
         }`}>{title}</span>
-        <button
-          onClick={() => setSettingsOpen(!settingsOpen)}
-          className={`text-sm transition-colors cursor-pointer ${
-            theme === "dark" ? "text-zinc-500 hover:text-zinc-300" : "text-stone-400 hover:text-stone-600"
-          }`}
-        >
-          Aa
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setSelectMode(s => !s)}
+            className={`text-sm transition-colors cursor-pointer ${
+              selectMode
+                ? (theme === "dark" ? "text-zinc-100" : "text-stone-900")
+                : (theme === "dark" ? "text-zinc-500 hover:text-zinc-300" : "text-stone-400 hover:text-stone-600")
+            }`}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
+              <line x1="12" y1="4" x2="12" y2="20" />
+              <line x1="8" y1="4" x2="16" y2="4" />
+              <line x1="8" y1="20" x2="16" y2="20" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setSettingsOpen(!settingsOpen)}
+            className={`text-sm transition-colors cursor-pointer ${
+              theme === "dark" ? "text-zinc-500 hover:text-zinc-300" : "text-stone-400 hover:text-stone-600"
+            }`}
+          >
+            Aa
+          </button>
+        </div>
       </div>
 
       {settingsOpen && (
@@ -265,15 +283,15 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
           </div>
         )}
         <div ref={containerRef} className="w-full h-full" />
-        {isReady && (
+        {isReady && !selectMode && (
           <>
             <div
-              className="tap-zone absolute top-0 left-0 w-1/4 h-full z-10"
+              className="absolute top-0 left-0 w-1/4 h-full z-10"
               onClick={(e) => handleOverlayTap(e, "prev")}
               style={{ WebkitTapHighlightColor: "transparent" }}
             />
             <div
-              className="tap-zone absolute top-0 right-0 w-1/4 h-full z-10"
+              className="absolute top-0 right-0 w-1/4 h-full z-10"
               onClick={(e) => handleOverlayTap(e, "next")}
               style={{ WebkitTapHighlightColor: "transparent" }}
             />

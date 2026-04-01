@@ -13,9 +13,10 @@ interface UseTextSelectionOptions {
   contentsRef: React.RefObject<any>;
   containerRef: React.RefObject<HTMLDivElement | null>;
   contentsVersion: number;
+  selectMode: boolean;
 }
 
-export default function useTextSelection({ contentsRef, containerRef, contentsVersion }: UseTextSelectionOptions) {
+export default function useTextSelection({ contentsRef, containerRef, contentsVersion, selectMode }: UseTextSelectionOptions) {
   const [selection, setSelection] = useState<SelectionState | null>(null);
   const skipNextRef = useRef(false);
 
@@ -27,12 +28,19 @@ export default function useTextSelection({ contentsRef, containerRef, contentsVe
     skipNextRef.current = true;
   }, []);
 
+  // Clear selection when select mode is toggled off
   useEffect(() => {
+    if (!selectMode) {
+      setSelection(null);
+    }
+  }, [selectMode]);
+
+  useEffect(() => {
+    if (!selectMode) return;
+
     const contents = contentsRef.current;
     const doc = contents?.document as Document | undefined;
     if (!doc) return;
-
-    const isTouchDevice = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 
     const getTooltipPos = () => {
       const sel = doc.getSelection();
@@ -58,41 +66,13 @@ export default function useTextSelection({ contentsRef, containerRef, contentsVe
       };
     };
 
-    // Given a click point, select just the word under the cursor.
-    // Used when the browser's native dblclick selection bleeds across
-    // CSS columns (selecting the entire page instead of one word).
-    const selectWordAt = (x: number, y: number) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const range = (doc as any).caretRangeFromPoint?.(x, y) as Range | null;
-      if (!range || range.startContainer.nodeType !== Node.TEXT_NODE) return;
-      const text = range.startContainer.textContent || "";
-      const offset = range.startOffset;
-      let start = offset;
-      let end = offset;
-      while (start > 0 && /\S/.test(text[start - 1])) start--;
-      while (end < text.length && /\S/.test(text[end])) end++;
-      if (start === end) return;
-      range.setStart(range.startContainer, start);
-      range.setEnd(range.startContainer, end);
-      const sel = doc.getSelection();
-      sel?.removeAllRanges();
-      sel?.addRange(range);
-    };
-
     // Desktop: double-click selects a word
-    const onDblClick = (e: MouseEvent) => {
+    const onDblClick = () => {
       if (skipNextRef.current) {
         skipNextRef.current = false;
         return;
       }
       setTimeout(() => {
-        const sel = doc.getSelection();
-        const text = sel?.toString().trim() || "";
-        // If selection spans multiple words, the browser likely bled across
-        // CSS columns. Re-select just the word at the click point.
-        if (text.split(/\s+/).length > 2) {
-          selectWordAt(e.clientX, e.clientY);
-        }
         const pos = getTooltipPos();
         if (pos) setSelection(pos);
         else setSelection(null);
@@ -125,46 +105,31 @@ export default function useTextSelection({ contentsRef, containerRef, contentsVe
       }
     };
 
+    // iOS Safari: long-press triggers selectionchange on the main document
+    const onSelectionChange = () => {
+      if (skipNextRef.current) {
+        skipNextRef.current = false;
+        return;
+      }
+      const sel = doc.getSelection();
+      const text = sel?.toString().trim();
+      if (!text) return;
+      const pos = getTooltipPos();
+      if (pos) setSelection(pos);
+    };
+
     doc.addEventListener("dblclick", onDblClick);
     doc.addEventListener("mouseup", onMouseUp);
     doc.addEventListener("click", onClick);
-
-    // iOS Safari: selectionchange doesn't fire on iframe documents, and
-    // dblclick/mouseup don't fire on touch. Poll the iframe selection
-    // instead. When the same text is seen twice (~600ms stable), capture
-    // it, clear the native selection (dismisses iOS menu), and show our
-    // tooltip.
-    let pollId: ReturnType<typeof setInterval> | undefined;
-    if (isTouchDevice) {
-      let lastText = "";
-      pollId = setInterval(() => {
-        if (skipNextRef.current) {
-          skipNextRef.current = false;
-          return;
-        }
-        const sel = doc.getSelection();
-        const text = sel?.toString().trim() || "";
-
-        if (text && text === lastText) {
-          const pos = getTooltipPos();
-          if (pos) {
-            sel!.removeAllRanges();
-            setSelection(pos);
-          }
-          lastText = "";
-          return;
-        }
-        lastText = text;
-      }, 300);
-    }
+    doc.addEventListener("selectionchange", onSelectionChange);
 
     return () => {
-      if (pollId) clearInterval(pollId);
       doc.removeEventListener("dblclick", onDblClick);
       doc.removeEventListener("mouseup", onMouseUp);
       doc.removeEventListener("click", onClick);
+      doc.removeEventListener("selectionchange", onSelectionChange);
     };
-  }, [contentsRef, containerRef, contentsVersion]);
+  }, [contentsRef, containerRef, contentsVersion, selectMode]);
 
   return { selection, dismiss, skipNext };
 }
