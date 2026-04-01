@@ -268,12 +268,12 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
         {isReady && (
           <>
             <div
-              className="absolute top-0 left-0 w-1/4 h-full z-10"
+              className="tap-zone absolute top-0 left-0 w-1/4 h-full z-10"
               onClick={(e) => handleOverlayTap(e, "prev")}
               style={{ WebkitTapHighlightColor: "transparent" }}
             />
             <div
-              className="absolute top-0 right-0 w-1/4 h-full z-10"
+              className="tap-zone absolute top-0 right-0 w-1/4 h-full z-10"
               onClick={(e) => handleOverlayTap(e, "next")}
               style={{ WebkitTapHighlightColor: "transparent" }}
             />

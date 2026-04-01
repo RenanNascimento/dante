@@ -4,3 +4,13 @@ html, body {
   overflow: hidden;
   height: 100%;
 }
+
+/* Overlay tap zones: invisible to mouse on desktop, active on touch devices */
+.tap-zone {
+  pointer-events: none;
+}
+@media (hover: none) and (pointer: coarse) {
+  .tap-zone {
+    pointer-events: auto;
+  }
+}
