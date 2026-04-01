@@ -58,13 +58,41 @@ export default function useTextSelection({ contentsRef, containerRef, contentsVe
       };
     };
 
+    // Given a click point, select just the word under the cursor.
+    // Used when the browser's native dblclick selection bleeds across
+    // CSS columns (selecting the entire page instead of one word).
+    const selectWordAt = (x: number, y: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const range = (doc as any).caretRangeFromPoint?.(x, y) as Range | null;
+      if (!range || range.startContainer.nodeType !== Node.TEXT_NODE) return;
+      const text = range.startContainer.textContent || "";
+      const offset = range.startOffset;
+      let start = offset;
+      let end = offset;
+      while (start > 0 && /\S/.test(text[start - 1])) start--;
+      while (end < text.length && /\S/.test(text[end])) end++;
+      if (start === end) return;
+      range.setStart(range.startContainer, start);
+      range.setEnd(range.startContainer, end);
+      const sel = doc.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    };
+
     // Desktop: double-click selects a word
-    const onDblClick = () => {
+    const onDblClick = (e: MouseEvent) => {
       if (skipNextRef.current) {
         skipNextRef.current = false;
         return;
       }
       setTimeout(() => {
+        const sel = doc.getSelection();
+        const text = sel?.toString().trim() || "";
+        // If selection spans multiple words, the browser likely bled across
+        // CSS columns. Re-select just the word at the click point.
+        if (text.split(/\s+/).length > 2) {
+          selectWordAt(e.clientX, e.clientY);
+        }
         const pos = getTooltipPos();
         if (pos) setSelection(pos);
         else setSelection(null);
