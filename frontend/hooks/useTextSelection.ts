@@ -36,8 +36,15 @@ export default function useTextSelection({ contentsRef, containerRef, isReady }:
     // iOS long-press. Debounce so the tooltip only appears once the
     // selection stabilises.
     let timer: ReturnType<typeof setTimeout>;
+    let programmaticClear = false;
+    const isTouchDevice = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 
     const onSelectionChange = () => {
+      if (programmaticClear) {
+        programmaticClear = false;
+        return;
+      }
+
       clearTimeout(timer);
       timer = setTimeout(() => {
         if (skipNextRef.current) {
@@ -66,6 +73,13 @@ export default function useTextSelection({ contentsRef, containerRef, isReady }:
         if (!iframe) return;
 
         const iframeRect = iframe.getBoundingClientRect();
+
+        // On touch devices, clear native selection to dismiss the iOS
+        // context menu (Copy / Look Up / Translate). Our tooltip replaces it.
+        if (isTouchDevice) {
+          programmaticClear = true;
+          sel.removeAllRanges();
+        }
 
         setSelection({
           text,
