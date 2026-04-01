@@ -46,26 +46,20 @@ export default function LookupModal({
     })();
   }, [text, action]);
 
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
     dragging.current = true;
     offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
     e.preventDefault();
   }, [pos]);
 
-  useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
-      if (!dragging.current) return;
-      setPos({ x: e.clientX - offset.current.x, y: e.clientY - offset.current.y });
-    };
-    const onMouseUp = () => {
-      dragging.current = false;
-    };
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    setPos({ x: e.clientX - offset.current.x, y: e.clientY - offset.current.y });
+  }, []);
+
+  const onPointerUp = useCallback(() => {
+    dragging.current = false;
   }, []);
 
   const bg = theme === "dark" ? "bg-zinc-900" : "bg-white";
@@ -83,8 +77,10 @@ export default function LookupModal({
     >
       {/* Draggable header */}
       <div
-        onMouseDown={onMouseDown}
-        className={`flex items-center justify-between px-3 py-2 cursor-move select-none ${headerBg} border-b ${border}`}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        className={`flex items-center justify-between px-3 py-2 cursor-move select-none touch-none ${headerBg} border-b ${border}`}
       >
         <span className={`text-xs font-medium ${mutedColor}`}>{label}</span>
         <button
