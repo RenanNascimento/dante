@@ -22,6 +22,7 @@ interface LoadedSettings {
   initialTheme: Theme;
   initialSpeakingRate: number;
   initialPausePerParagraph: boolean;
+  initialShowStats: boolean;
 }
 
 interface LookupState {
@@ -45,6 +46,7 @@ export default function Reader({ data, onClose }: ReaderProps) {
         initialTheme: saved?.theme ?? "dark",
         initialSpeakingRate: saved?.speakingRate ?? 0.75,
         initialPausePerParagraph: saved?.pausePerParagraph ?? false,
+        initialShowStats: saved?.showStats ?? true,
       });
     })();
   }, [data]);
@@ -71,6 +73,7 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [pausePerParagraph, setPausePerParagraph] = useState(settings.initialPausePerParagraph);
+  const [showStats, setShowStats] = useState(settings.initialShowStats);
   const [speakingRate, setSpeakingRate] = useState(settings.initialSpeakingRate);
   const [lookup, setLookup] = useState<LookupState | null>(null);
 
@@ -118,8 +121,8 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
   }, [selection, dismissSelection, skipNext]);
 
   // Keep a ref with the latest settings so we can save on unmount
-  const latestSettingsRef = useRef({ currentCfi, fontSize, theme, speakingRate, pausePerParagraph, title });
-  latestSettingsRef.current = { currentCfi, fontSize, theme, speakingRate, pausePerParagraph, title };
+  const latestSettingsRef = useRef({ currentCfi, fontSize, theme, speakingRate, pausePerParagraph, showStats, title });
+  latestSettingsRef.current = { currentCfi, fontSize, theme, speakingRate, pausePerParagraph, showStats, title };
 
   // Save settings whenever they change
   useEffect(() => {
@@ -130,9 +133,10 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
       theme,
       speakingRate,
       pausePerParagraph,
+      showStats,
       title,
     });
-  }, [settings.bookKey, currentCfi, fontSize, theme, speakingRate, pausePerParagraph, title]);
+  }, [settings.bookKey, currentCfi, fontSize, theme, speakingRate, pausePerParagraph, showStats, title]);
 
   // Save on unmount to capture the very latest state
   useEffect(() => {
@@ -145,6 +149,7 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
           theme: s.theme,
           speakingRate: s.speakingRate,
           pausePerParagraph: s.pausePerParagraph,
+          showStats: s.showStats,
           title: s.title,
         });
       }
@@ -263,6 +268,8 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
           onThemeChange={setTheme}
           pausePerParagraph={pausePerParagraph}
           onPausePerParagraphChange={setPausePerParagraph}
+          showStats={showStats}
+          onShowStatsChange={setShowStats}
           speakingRate={speakingRate}
           onSpeakingRateChange={setSpeakingRate}
           onHome={onClose}
@@ -324,6 +331,7 @@ function ReaderInner({ data, onClose, settings }: ReaderInnerProps) {
         totalPages={totalPages}
         onGoToPage={goToPage}
         theme={theme}
+        showStats={showStats}
         audioState={audioState}
         onTogglePlayPause={togglePlayPause}
         onSeekBackward={seekBackward}

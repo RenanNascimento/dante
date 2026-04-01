@@ -9,6 +9,8 @@ interface SettingsMenuProps {
   onThemeChange: (theme: Theme) => void;
   pausePerParagraph: boolean;
   onPausePerParagraphChange: (value: boolean) => void;
+  showStats: boolean;
+  onShowStatsChange: (value: boolean) => void;
   speakingRate: number;
   onSpeakingRateChange: (rate: number) => void;
   onHome: () => void;
@@ -24,6 +26,8 @@ export default function SettingsMenu({
   onThemeChange,
   pausePerParagraph,
   onPausePerParagraphChange,
+  showStats,
+  onShowStatsChange,
   speakingRate,
   onSpeakingRateChange,
   onHome,
@@ -105,7 +109,7 @@ export default function SettingsMenu({
         <p className={`${label} text-xs uppercase tracking-wide mb-3`}>Reading</p>
         <button
           onClick={() => onPausePerParagraphChange(!pausePerParagraph)}
-          className="flex items-center justify-between w-full cursor-pointer mb-4"
+          className="flex items-center justify-between w-full cursor-pointer mb-3"
         >
           <span className={`${text} text-sm`}>Pause per paragraph</span>
           <div
@@ -116,6 +120,23 @@ export default function SettingsMenu({
             <div
               className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
                 pausePerParagraph ? "translate-x-4" : "translate-x-0.5"
+              }`}
+            />
+          </div>
+        </button>
+        <button
+          onClick={() => onShowStatsChange(!showStats)}
+          className="flex items-center justify-between w-full cursor-pointer mb-4"
+        >
+          <span className={`${text} text-sm`}>Show progress</span>
+          <div
+            className={`w-9 h-5 rounded-full relative transition-colors ${
+              showStats ? "bg-blue-500" : (theme === "dark" ? "bg-zinc-700" : "bg-stone-300")
+            }`}
+          >
+            <div
+              className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                showStats ? "translate-x-4" : "translate-x-0.5"
               }`}
             />
           </div>

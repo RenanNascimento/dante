@@ -6,6 +6,7 @@ export interface SavedSettings {
   theme: Theme;
   speakingRate: number;
   pausePerParagraph: boolean;
+  showStats: boolean;
   title: string;
 }
 

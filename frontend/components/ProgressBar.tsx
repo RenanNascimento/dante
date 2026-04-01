@@ -10,6 +10,7 @@ interface ProgressBarProps {
   totalPages: number;
   onGoToPage: (page: number) => void;
   theme: Theme;
+  showStats: boolean;
   audioState: AudioState;
   onTogglePlayPause: () => void;
   onSeekBackward: () => void;
@@ -22,6 +23,7 @@ export default function ProgressBar({
   totalPages,
   onGoToPage,
   theme,
+  showStats,
   audioState,
   onTogglePlayPause,
   onSeekBackward,
@@ -53,7 +55,11 @@ export default function ProgressBar({
     <div className={`flex items-center justify-between px-4 py-2 shrink-0 ${
       theme === "dark" ? "bg-black" : "bg-[#faf5ee]"
     }`}>
-      <span className={`text-sm ${muted} w-12`}>{progress}%</span>
+      {showStats ? (
+        <span className={`text-sm ${muted} w-12`}>{progress}%</span>
+      ) : (
+        <span className="w-12" />
+      )}
 
       <div className="flex items-center gap-4">
         <button
@@ -87,34 +93,38 @@ export default function ProgressBar({
         </button>
       </div>
 
-      {editing ? (
-        <form
-          onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
-          className="w-10 flex justify-end"
-        >
-          <input
-            ref={inputRef}
-            type="number"
-            min={1}
-            max={totalPages}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onBlur={handleSubmit}
-            onKeyDown={(e) => { if (e.key === "Escape") setEditing(false); }}
-            className={`w-10 text-xs text-right bg-transparent border-b outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
-              theme === "dark" ? "text-zinc-300 border-zinc-500" : "text-stone-600 border-stone-400"
+      {showStats ? (
+        editing ? (
+          <form
+            onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
+            className="w-10 flex justify-end"
+          >
+            <input
+              ref={inputRef}
+              type="number"
+              min={1}
+              max={totalPages}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onBlur={handleSubmit}
+              onKeyDown={(e) => { if (e.key === "Escape") setEditing(false); }}
+              className={`w-10 text-xs text-right bg-transparent border-b outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+                theme === "dark" ? "text-zinc-300 border-zinc-500" : "text-stone-600 border-stone-400"
+              }`}
+            />
+          </form>
+        ) : (
+          <button
+            onClick={() => { setInputValue(String(currentPage)); setEditing(true); }}
+            className={`text-sm ${muted} cursor-pointer transition-colors ${
+              theme === "dark" ? "hover:text-zinc-300" : "hover:text-stone-600"
             }`}
-          />
-        </form>
+          >
+            {currentPage}/{totalPages}
+          </button>
+        )
       ) : (
-        <button
-          onClick={() => { setInputValue(String(currentPage)); setEditing(true); }}
-          className={`text-sm ${muted} cursor-pointer transition-colors ${
-            theme === "dark" ? "hover:text-zinc-300" : "hover:text-stone-600"
-          }`}
-        >
-          {currentPage}/{totalPages}
-        </button>
+        <span className="w-12" />
       )}
     </div>
   );
