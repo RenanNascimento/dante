@@ -68,6 +68,11 @@ export default function useEpub({ data, containerRef, initialCfi, initialFontSiz
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const locationRef = useRef<any>(null);
 
+  // Stable reading position — only updated by real navigation, not resize reflows.
+  // Prevents cascading CFI drift across rotation cycles.
+  const userCfiRef = useRef<string>(initialCfi || "");
+  const isResizingRef = useRef(false);
+
   const goNext = useCallback(() => {
     return renditionRef.current?.next();
   }, []);
@@ -260,6 +265,23 @@ export default function useEpub({ data, containerRef, initialCfi, initialFontSiz
 
       renditionRef.current = rendition;
 
+      // Override epub.js's resize re-anchoring to use our stable CFI
+      // instead of this.location.start.cfi (which drifts on each resize).
+      // Also sets isResizingRef so relocated events don't update userCfiRef.
+      let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (rendition as any).onResized = function (size: any, epubcfi: string) {
+        isResizingRef.current = true;
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => { isResizingRef.current = false; }, 800);
+
+        rendition.emit("resized", size, epubcfi);
+        const cfi = userCfiRef.current || epubcfi || (rendition as any).location?.start?.cfi;
+        if (cfi) {
+          rendition.display(cfi);
+        }
+      };
+
       // Base styles shared by all themes
       rendition.themes.default({
         "body, body *": {
@@ -338,6 +360,10 @@ export default function useEpub({ data, containerRef, initialCfi, initialFontSiz
         setProgress(Math.round(percent * 100));
         setCurrentPage(Math.floor(percent * total) + 1);
         setCurrentCfi(cfi);
+        // Only update stable position on real navigation, not resize reflows
+        if (!isResizingRef.current) {
+          userCfiRef.current = cfi;
+        }
       });
 
       // Trigger relocated manually so page stats populate immediately
@@ -345,6 +371,7 @@ export default function useEpub({ data, containerRef, initialCfi, initialFontSiz
       const currentLocation = rendition.currentLocation() as any;
       if (!destroyed && currentLocation?.start?.cfi) {
         locationRef.current = currentLocation;
+        userCfiRef.current = currentLocation.start.cfi;
         const percent = book.locations.percentageFromCfi(currentLocation.start.cfi);
         setProgress(Math.round(percent * 100));
         setCurrentPage(Math.floor(percent * total) + 1);
@@ -394,18 +421,6 @@ export default function useEpub({ data, containerRef, initialCfi, initialFontSiz
     }
   }, [fontSize]);
 
-  // Handle resize
-  useEffect(() => {
-    const handleResize = () => {
-      const container = containerRef.current;
-      if (renditionRef.current && container) {
-        renditionRef.current.resize(container.clientWidth, container.clientHeight);
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [containerRef]);
 
   return { progress, currentPage, totalPages, currentCfi, goNext, goPrev, goToPage, title, isReady, fontSize, setFontSize, theme, setTheme, getPageText, getPageParagraphs, prepareHighlighting, highlightWord, clearHighlight, contentsVersion, contentsRef, renditionRef };
 }
